@@ -13,8 +13,8 @@ def process_message(topic_name, delegate_method=None, group_id='my_group_demi'):
         sasl_mechanism=config['kafka.sasl_mechanism'],
         sasl_plain_username=config['kafka.username'],
         sasl_plain_password=config['kafka.password'],
-        value_deserializer=lambda v: json.loads(v.decode('utf-8')) if v else None,
-        key_deserializer=lambda v: json.loads(v.decode('utf-8')) if v else None,
+        value_deserializer=lambda v: v, #json.loads(v.decode('utf-8')) if v else None,
+        key_deserializer=lambda v: v, #json.loads(v.decode('utf-8')) if v else None,
         auto_offset_reset='earliest',  # Зчитування повідомлень з початку
         enable_auto_commit=True,       # Автоматичне підтвердження зчитаних повідомлень
         group_id=group_id   # Ідентифікатор групи споживачів
