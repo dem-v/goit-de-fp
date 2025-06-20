@@ -24,7 +24,37 @@ spark_session = None
 bio_df_cached = None
 
 
+import subprocess, logging
 
+# Налаштування логування
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+def run_java_version():
+    """Run 'java -version' command and log the output"""
+    try:
+        # java -version outputs to stderr, not stdout
+        result = subprocess.run(['java', '-version'],
+                                capture_output=True,
+                                text=True,
+                                check=True)
+
+        # Log the output (java -version outputs to stderr)
+        logger.info(f"Java version must be 11. Java check result:")
+        for line in result.stderr.splitlines():
+            logger.info(f"  {line}")
+
+        return True
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error running java -version: {str(e)}")
+        logger.error(f"Error output: {e.stderr}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error running java -version: {str(e)}")
+        return False
 
 def consumer_processing_function(message):
     global spark_session, bio_df_cached
@@ -134,7 +164,7 @@ def consumer_processing_function(message):
                  .save())
 
             try:
-                try_with_retry(write_to_kafka, retries=3, delay=2)
+                write_to_kafka()
                 print(f"Successfully wrote {record_count} records to Kafka topic {config['kafka.out_topic']}")
             except Exception as e:
                 print(f"Error writing to Kafka after retries: {e}")
@@ -154,7 +184,7 @@ def consumer_processing_function(message):
                  .save())
 
             try:
-                try_with_retry(write_to_mysql, retries=3, delay=2)
+                write_to_mysql()
                 print(f"Successfully wrote {record_count} records to MySQL table {config['jdbc.output_table']}")
             except Exception as e:
                 print(f"Error writing to MySQL after retries: {e}")
@@ -217,6 +247,8 @@ def initialize_spark_and_data():
 
 if __name__ == "__main__":
     try:
+        run_java_version()
+
         print(f"Starting main processor for topic: {config['kafka.in_topic']}")
 
         # Ініціалізуємо Spark та дані один раз

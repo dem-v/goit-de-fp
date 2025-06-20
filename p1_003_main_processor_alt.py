@@ -19,6 +19,33 @@ from pyspark.sql.streaming import StreamingQuery
 
 from configs import config
 
+import subprocess
+
+
+def run_java_version():
+    """Run 'java -version' command and log the output"""
+    try:
+        # java -version outputs to stderr, not stdout
+        result = subprocess.run(['java', '-version'],
+                                capture_output=True,
+                                text=True,
+                                check=True)
+
+        # Log the output (java -version outputs to stderr)
+        logger.info(f"Java version must be 11. Java check result:")
+        for line in result.stderr.splitlines():
+            logger.info(f"  {line}")
+
+        return True
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error running java -version: {str(e)}")
+        logger.error(f"Error output: {e.stderr}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error running java -version: {str(e)}")
+        return False
+
+
 # Налаштування логування
 logging.basicConfig(
     level=logging.INFO,
@@ -139,6 +166,8 @@ class SparkSessionManager:
 
     @staticmethod
     def create_session(app_name: str = "AthleteResultsProcessor") -> SparkSession:
+        run_java_version()
+
         """Створення оптимізованої Spark Session"""
         logger.info("Creating optimized Spark Session...")
 

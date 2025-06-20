@@ -1,0 +1,5 @@
+kafka_python==2.2.11
+pandas==2.3.0
+pyspark==3.5.5
+pyspark_stubs==3.0.0.post3
+portalocker>=2.8.1
